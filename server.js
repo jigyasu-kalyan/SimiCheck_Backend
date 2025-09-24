@@ -1,12 +1,16 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const authMiddleware = require('./authMiddleware');
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = 8085;
+const upload = multer({ storage: multer.memoryStorage()});
 
 app.use(cors());
 app.use(express.json());
@@ -63,6 +67,34 @@ app.post('/login', async (req, res) => {
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ error: "Something went wrong during login."});
+    }
+})
+
+app.post('/contests', authMiddleware, upload.single('submissions'), async (req, res) => {
+    const { name, file } = req.body;
+    const authorId = req.user.userId;
+
+    if (!name) {
+        return res.status(400).json({ error: 'Contest name is required.'});
+    }
+    if (!file) {
+        return res.status(400).json({ error: 'Submissions zip file is required.'});
+    }
+
+
+    try {
+        const newContest = await prisma.contest.create({
+            data: {
+                name: name,
+                authorId: authorId,
+            }
+        })
+        
+        console.log('Recieved file:', file.originalname, 'Size:', file.size);
+        res.status(201).json({ message: 'Contest created successfully!', contest: newContest });
+    } catch (error) {
+        console.error("Error creating contest:", error);
+        res.status(500).json({ error: 'Something went wrong creating the contest.'});
     }
 })
 
