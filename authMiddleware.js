@@ -2,10 +2,6 @@ const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
 
-    console.log("--- Auth Middleware Triggered ---");
-    console.log("Authorization Header:", req.header('Authorization'));
-    console.log("JWT Secret being used:", process.env.JWT_SECRET);    // Debugging line
-
     const authHeader = req.header('Authorization');
 
     if (!authHeader) {

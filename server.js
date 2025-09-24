@@ -98,6 +98,21 @@ app.post('/contests', authMiddleware, upload.single('submissions'), async (req, 
     }
 })
 
+app.get('/contests', authMiddleware, async (req, res) => {
+    const authorId = req.user.userId;
+
+    try {
+        const contests = await prisma.contest.findMany({
+            where: { authorId: authorId},
+            orderBy: { createdAt: 'desc'},
+        })
+        res.status(200).json(contests);
+    } catch (error) {
+        console.error("Error fetching contests:", error);
+        res.status(500).json({error: "Something went wrong while fetching contests."});
+    }
+})
+
 app.get('/',(req, res) => {
     res.json({message: "Hello from the SimiCheck backend!" });
 })
